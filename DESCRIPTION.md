@@ -1,3 +1,5 @@
+*You can read this post on ethresear.ch [here](https://ethresear.ch/t/web2-nullifiers-using-voprf/21762).*
+
 ## Abstract
 
 Recent development of protocols, that allow us to make Web2 data portable & verifiable such as [ZK Email](https://prove.email/) or [TLSNotary](https://tlsnotary.org/) opens new use-cases and opportunities for us. For example, we can make proof of ownership of some x.com username or email address and verify it on-chain with ZK Email. Projects like [OpenPassport](https://www.openpassport.app/), [Anon Aadhaar](https://github.com/anon-aadhaar/anon-aadhaar) (and others) are also the case.
