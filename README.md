@@ -10,11 +10,9 @@
 
 ## 📝 Overview
 
-vOPRF-ID is a monorepo containing implementations for secure nullifier generation based on verifiable Oblivious Pseudorandom Functions (vOPRF). 
+vOPRF-ID is a monorepo containing implementations for secure nullifier generation based on verifiable Oblivious Pseudorandom Functions (vOPRF).
 
-## 🚀 Getting Started
-
-[Coming soon...]
+For more details, please refer to the [DESCRIPTION.md](DESCRIPTION.md) file.
 
 ## 📄 License
 
