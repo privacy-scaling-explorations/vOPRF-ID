@@ -30,3 +30,6 @@ out/
 
 # Debug logs
 *.log
+
+# mdbook
+book/
