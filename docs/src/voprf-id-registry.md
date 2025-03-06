@@ -40,5 +40,3 @@ As you can see, the pair $(sG, \text{ salt})$ will serve as an **action key**, a
 While reading this, you might ask the same questions we have right now. For example, how we can prevent users spamming OPRF? It also makes sense to make system even more general and give people an option to specify which OPRF provider they gonna use and of what id-provider they will use (there can be many even for the same id-provider, e.g. bridged by zkEmail, zkTLS & OpenPassport).
 While they are important, they are not in the scope of this blog post. 
 
-Follow the updates & new posts on this and thanks for your attention! 
-
