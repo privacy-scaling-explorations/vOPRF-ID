@@ -1,1 +1,1 @@
-# vOPRF MPC (Rust Implementation) Description
+# vOPRF MPC Description
