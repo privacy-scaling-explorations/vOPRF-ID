@@ -12,8 +12,16 @@
 
 vOPRF-ID is a monorepo containing implementations for secure nullifier generation based on verifiable Oblivious Pseudorandom Functions (vOPRF).
 
-For more details, please refer to the [DESCRIPTION.md](DESCRIPTION.md) file.
+To host the [docs](./docs/) locally:
+```bash
+cd docs
+mdbook serve
+```
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
+Big thanks to Holonym Foundation for their Mishti Network [implementation](https://github.com/holonym-foundation/mishti-crypto). 
