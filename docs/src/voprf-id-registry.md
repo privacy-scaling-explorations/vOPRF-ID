@@ -13,27 +13,27 @@ In the next section I'll explain how we can do that.
 
 ## How it works
 
-In the end of [the overview](./overview.md) explanation I said:           $\DeclareMathOperator{hash}{hash}                           \DeclareMathOperator{cm}{commitment}                        \DeclareMathOperator{hashc}{hashToCurve}$
-> instead of revealing nullifier we can reveal $\hash(\text{nullifier}, \text{AppID})$ - where $\text{AppID}$ is a unique identifier of the app, and that's gonna be our real nullifier.
+In the end of [the overview](./overview.md) explanation I said: \\( \DeclareMathOperator{hash}{hash} \DeclareMathOperator{cm}{commitment} \DeclareMathOperator{hashc}{hashToCurve} \\)
+> instead of revealing nullifier we can reveal \\( \hash(\text{nullifier}, \text{AppID}) \\) - where \\( \text{AppID} \\) is a unique identifier of the app, and that's gonna be our real nullifier.
 
 That's actually the key for building such system.
 
-We can deploy one registry smart-contract. We'll set $\text{AppID} = 0$. We also gonna keep $\text{pseudonym} = \hash(s * G, \text{ AppID})$, where, $s$ is "private key" of OPRF MPC, and $G = \hashc(\text{UserID})$.
-All the identities will be stored in Merkle Tree, and $\text{pubkey} = \hash(\text{pseudonym}, \cm_1)$ will be stored in its leaves. 
-For those who forgot, $\cm_1 = \hash(\text{UserID}, \text{ salt})$.
+We can deploy one registry smart-contract. We'll set \\( \text{AppID} = 0 \\). We also gonna keep \\( \text{pseudonym} = \hash(s * G, \text{ AppID}) \\), where, \\( s \\) is "private key" of OPRF MPC, and \\( G = \hashc(\text{UserID}) \\).
+All the identities will be stored in Merkle Tree, and \\( \text{pubkey} = \hash(\text{pseudonym}, \cm_1) \\) will be stored in its leaves. 
+For those who forgot, \\( \cm_1 = \hash(\text{UserID}, \text{ salt}) \\).
 
-Now, let's say we registered our github identity in our global system and there's an app that gives airdrop to their contributors (of course we want to claim airdrop anonymously). The airdrop app will need to set their own $\text{AppID}$, different from 0, because 0 is already taken; this can get checked by registry smart-contract. It will also need to create a merkle tree of github usernames that are eligible for airdrop (our github username is in that list).
+Now, let's say we registered our github identity in our global system and there's an app that gives airdrop to their contributors (of course we want to claim airdrop anonymously). The airdrop app will need to set their own \\( \text{AppID} \\), different from 0, because 0 is already taken; this can get checked by registry smart-contract. It will also need to create a merkle tree of github usernames that are eligible for airdrop (our github username is in that list).
 
 **Now, to claim airdrop anonymously we'll need to create zk proof with the following parameters**:
-* Public: $\text{AppID}, \text{ nullifier}, \text{ registryRoot}, \text{ appRoot}$
-* Private: $\text{UserID, } sG, \text{ salt}$
+* Public: \\( \text{AppID}, \text{ nullifier}, \text{ registryRoot}, \text{ appRoot} \\)
+* Private: \\( \text{UserID, } sG, \text{ salt} \\)
 
 and the constraints:
 $$\text{pseudonym} \longleftarrow \hash(sG, \text{ 0})$$ $$\cm_1 \longleftarrow \hash(\text{UserID}, \text{ salt})$$ $$\text{pubkey} \longleftarrow \hash(\text{pseudonym}, \cm_1)$$ $$\text{registryRoot} = \text{merkleTreeVerify(pubkey)}$$ $$\text{appRoot} = \text{merkleTreeVerify(UserID)}$$ $$\text{nullifier} = \hash(sG, \text{ AppID})$$
 
 <br>
 
-As you can see, the pair $(sG, \text{ salt})$ will serve as an **action key**, and $sG$ itself will be a **viewing key**.
+As you can see, the pair \\( (sG, \text{ salt}) \\) will serve as an **action key**, and $sG$ itself will be a **viewing key**.
 
 ## Additional comments
 
