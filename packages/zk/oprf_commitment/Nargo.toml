@@ -1,0 +1,7 @@
+[package]
+name = "oprf_commitment"
+type = "bin"
+authors = ["Aditya Bisht"]
+
+[dependencies]
+noir_bigcurve = { tag = "v0.6.0", git = "https://github.com/noir-lang/noir_bigcurve" }
