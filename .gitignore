@@ -33,3 +33,5 @@ out/
 
 # mdbook
 book/
+
+private_key.txt
