@@ -66,6 +66,10 @@ impl ResponseError for Error {
     }
 }
 
+fn verify_zk_proof(proof: &Proof) -> Result<(), Error> {
+    todo!()
+}
+
 fn multiply_point(point: &ECPoint, private_key: &k256::Scalar) -> Result<ECPoint, Error> {
     // Convert string coordinates to big integers
     let x = hex::decode(&point.x).map_err(|_| Error::InvalidPoint)?;
@@ -110,9 +114,36 @@ fn multiply_point(point: &ECPoint, private_key: &k256::Scalar) -> Result<ECPoint
 }
 
 async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpResponse, Error> {
+    verify_zk_proof(&req.proof)?;
+
+    // Convert ECPoint to ProjectivePoint
+    let commitment2_point = ecpoint_to_projective(&req.commitment2)?;
+
+    // Perform scalar multiplication
     let result = multiply_point(&req.commitment2, &KEYS.0)?;
-    let dleq_proof = DleqProof::new();
+
+    // Generate DLEQ proof that shows the same private key was used
+    let dleq_proof = DleqProof::new(&commitment2_point);
+
     Ok(HttpResponse::Ok().json(EvaluateResponse { result, dleq_proof }))
+}
+
+// Helper function to convert ECPoint to ProjectivePoint
+fn ecpoint_to_projective(point: &ECPoint) -> Result<ProjectivePoint, Error> {
+    let x = hex::decode(&point.x).map_err(|_| Error::InvalidPoint)?;
+    let y = hex::decode(&point.y).map_err(|_| Error::InvalidPoint)?;
+
+    // Combine coordinates into SEC1 encoded point
+    let mut encoded = Vec::with_capacity(65);
+    encoded.push(0x04); // Uncompressed point marker
+    encoded.extend_from_slice(&x);
+    encoded.extend_from_slice(&y);
+
+    // Convert to curve point and verify it's valid
+    let encoded_point = EncodedPoint::from_bytes(&encoded).map_err(|_| Error::InvalidPoint)?;
+    ProjectivePoint::from_encoded_point(&encoded_point)
+        .into_option()
+        .ok_or(Error::InvalidPoint)
 }
 
 pub async fn run_server() -> std::io::Result<()> {
