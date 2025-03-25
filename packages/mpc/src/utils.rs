@@ -196,17 +196,6 @@ impl DleqProof {
     }
 }
 
-// pub fn multiply_point(point: &ECPoint, private_key: &k256::Scalar) -> Result<ECPoint, Error> {
-//     // Use the ecpoint_to_projective function to convert ECPoint to ProjectivePoint
-//     let projective_point = ecpoint_to_projective(point)?;
-
-//     // Perform scalar multiplication with private key
-//     let result_point = projective_point * private_key;
-
-//     // Use our helper function to convert back to ECPoint
-//     Ok(projective_to_ecpoint(&result_point))
-// }
-
 // Helper function to convert ECPoint to ProjectivePoint
 pub fn ecpoint_to_projective(point: &ECPoint) -> Result<ProjectivePoint, Error> {
     let x = hex::decode(&point.x).map_err(|_| Error::InvalidPoint)?;
