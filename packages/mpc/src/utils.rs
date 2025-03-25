@@ -8,11 +8,14 @@ use k256::{
         sec1::{FromEncodedPoint, ToEncodedPoint},
         PrimeField,
     },
-    AffinePoint, FieldBytes, ProjectivePoint, Scalar,
+    AffinePoint, EncodedPoint, FieldBytes, ProjectivePoint, Scalar,
 };
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use thiserror::Error;
+
+use crate::api::Error;
 
 const PRIVATE_KEY_FILE: &str = "./private_key.txt";
 
@@ -33,6 +36,21 @@ pub static KEYS: Lazy<(Scalar, ProjectivePoint)> = Lazy::new(|| {
         (private_key, public_key)
     }
 });
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ECPoint {
+    pub x: String,
+    pub y: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Proof {
+    // ZK proof fields will be added based on the circuit implementation
+}
+
+pub fn verify_zk_proof(proof: &Proof) -> Result<(), Error> {
+    todo!()
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DleqProof {
@@ -175,6 +193,52 @@ impl DleqProof {
 
         // Verify that c == c'
         c_scalar == c_prime_scalar
+    }
+}
+
+// pub fn multiply_point(point: &ECPoint, private_key: &k256::Scalar) -> Result<ECPoint, Error> {
+//     // Use the ecpoint_to_projective function to convert ECPoint to ProjectivePoint
+//     let projective_point = ecpoint_to_projective(point)?;
+
+//     // Perform scalar multiplication with private key
+//     let result_point = projective_point * private_key;
+
+//     // Use our helper function to convert back to ECPoint
+//     Ok(projective_to_ecpoint(&result_point))
+// }
+
+// Helper function to convert ECPoint to ProjectivePoint
+pub fn ecpoint_to_projective(point: &ECPoint) -> Result<ProjectivePoint, Error> {
+    let x = hex::decode(&point.x).map_err(|_| Error::InvalidPoint)?;
+    let y = hex::decode(&point.y).map_err(|_| Error::InvalidPoint)?;
+
+    // Combine coordinates into SEC1 encoded point
+    let mut encoded = Vec::with_capacity(65);
+    encoded.push(0x04); // Uncompressed point marker
+    encoded.extend_from_slice(&x);
+    encoded.extend_from_slice(&y);
+
+    // Convert to curve point and verify it's valid
+    let encoded_point = EncodedPoint::from_bytes(&encoded).map_err(|_| Error::InvalidPoint)?;
+    ProjectivePoint::from_encoded_point(&encoded_point)
+        .into_option()
+        .ok_or(Error::InvalidPoint)
+}
+
+// Helper function to convert ProjectivePoint to ECPoint
+pub fn projective_to_ecpoint(point: &ProjectivePoint) -> ECPoint {
+    // Convert to affine coordinates
+    let affine = AffinePoint::from(*point);
+    let encoded_point = affine.to_encoded_point(false); // false = uncompressed
+
+    // Extract x and y coordinates
+    let x_bytes = encoded_point.x().unwrap();
+    let y_bytes = encoded_point.y().unwrap();
+
+    // Format as hex strings
+    ECPoint {
+        x: hex::encode(x_bytes),
+        y: hex::encode(y_bytes),
     }
 }
 
