@@ -1,6 +1,7 @@
 #![allow(unused)]
 
 use std::fs;
+use std::process::Command;
 
 use k256::{
     elliptic_curve::{
@@ -14,6 +15,7 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
+use uuid::Uuid;
 
 use crate::api::Error;
 
@@ -43,13 +45,42 @@ pub struct ECPoint {
     pub y: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Proof {
-    // ZK proof fields will be added based on the circuit implementation
-}
+pub fn verify_zk_proof(proof: &str) -> Result<(), Error> {
+    // Create a unique temporary file for the proof
+    let temp_proof_path = format!("./target/temp_proof_{}", Uuid::new_v4());
 
-pub fn verify_zk_proof(proof: &Proof) -> Result<(), Error> {
-    todo!()
+    // Write proof string to the temporary file
+    fs::write(&temp_proof_path, proof).map_err(|e| {
+        eprintln!("Failed to write proof to temp file: {}", e);
+        Error::InvalidProof
+    })?;
+
+    // Execute the verification command
+    let output = Command::new("bb")
+        .arg("verify")
+        .arg("-k")
+        .arg("./target/vk")
+        .arg("-p")
+        .arg(&temp_proof_path)
+        .output()
+        .map_err(|e| {
+            // Clean up temp file before returning error
+            let _ = fs::remove_file(&temp_proof_path);
+            eprintln!("Failed to execute verification command: {}", e);
+            Error::InvalidProof
+        })?;
+
+    // Clean up temporary file
+    let _ = fs::remove_file(&temp_proof_path);
+
+    // Check if verification succeeded
+    if output.status.success() {
+        Ok(())
+    } else {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        eprintln!("Proof verification failed: {}", error_msg);
+        Err(Error::InvalidProof)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
