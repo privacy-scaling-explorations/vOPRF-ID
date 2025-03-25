@@ -7,6 +7,7 @@ use k256::{
     FieldBytes, ProjectivePoint, Scalar,
 };
 use once_cell::sync::Lazy;
+use serde::{Deserialize, Serialize};
 
 const PRIVATE_KEY_FILE: &str = "./private_key.txt";
 
@@ -27,3 +28,12 @@ pub static KEYS: Lazy<(Scalar, ProjectivePoint)> = Lazy::new(|| {
         (private_key, public_key)
     }
 });
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DleqProof {}
+
+impl DleqProof {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
