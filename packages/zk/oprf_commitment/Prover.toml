@@ -1,0 +1,13 @@
+random_scalar = "42"
+salt = "67890"
+user_id = "12345"
+user_id_commitment = "0x2ef418c0d71ccca89827b221a86e883a8a01b97282de65ab7ad8c3fe37cfaf1a"
+
+[oprf_commitment]
+is_infinity = "0"
+
+[oprf_commitment.x]
+limbs = ["0xc59f84183ae699079f22f40d594e3c", "0x2c1c46a23cd9dde053381c74590c9c", "0x37ef"]
+
+[oprf_commitment.y]
+limbs = ["0x435ae8a9713983bb5f40d31b841032", "0xe8caa880037f7530cde3a1ed05ce9a", "0xe164"]
