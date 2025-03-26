@@ -1,17 +1,26 @@
-name: test
+name: Forge Tests
 
-on: workflow_dispatch
+on:
+  push:
+    branches: main
+    paths:
+      - 'packages/registry/**'
+  pull_request:
+    branches: main
+    paths:
+      - 'packages/registry/**'
+  workflow_dispatch:
 
 env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  check:
-    strategy:
-      fail-fast: true
-
+  forge-tests:
     name: Foundry project
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/registry
     steps:
       - uses: actions/checkout@v4
         with:
