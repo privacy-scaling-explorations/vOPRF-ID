@@ -262,6 +262,46 @@ pub fn projective_to_ecpoint(point: &ProjectivePoint) -> ECPoint {
     }
 }
 
+pub fn parse_public_inputs(
+    proof: &[u8],
+) -> Result<(String, Vec<String>, Vec<String>), std::io::Error> {
+    // Extract user_id_commitment (bytes 0-31)
+    let user_id_commitment = format!("0x{}", hex::encode(&proof[0..32]));
+
+    // Extract oprf_commitment limbs (6 chunks of 32 bytes each)
+    let mut x_limbs = Vec::new();
+    let mut y_limbs = Vec::new();
+
+    // x limbs: bytes 32-63, 64-95, 96-127 (with padding)
+    for i in (32..128).step_by(32) {
+        let limb = &proof[i..i + 32];
+        let hex = hex::encode(limb);
+        // Remove leading zeros, but keep at least one digit
+        let trimmed = hex.trim_start_matches('0');
+        let limb_str = if trimmed.is_empty() {
+            "0".to_string()
+        } else {
+            format!("0x{}", trimmed)
+        };
+        x_limbs.push(limb_str);
+    }
+
+    // y limbs: bytes 128-159, 160-191, 192-223
+    for i in (128..224).step_by(32) {
+        let limb = &proof[i..i + 32];
+        let hex = hex::encode(limb);
+        let trimmed = hex.trim_start_matches('0');
+        let limb_str = if trimmed.is_empty() {
+            "0".to_string()
+        } else {
+            format!("0x{}", trimmed)
+        };
+        y_limbs.push(limb_str);
+    }
+
+    Ok((user_id_commitment, x_limbs, y_limbs))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -276,7 +316,7 @@ mod tests {
         let y = g * private_key;
 
         // Create a random point H
-        let h = ProjectivePoint::GENERATOR * Scalar::generate_vartime(&mut OsRng);
+        let h = g * Scalar::generate_vartime(&mut OsRng);
 
         // Calculate Z = private_key * H
         let z = h * private_key;
@@ -296,5 +336,15 @@ mod tests {
             !proof.verify(&g, &h, &y, &wrong_z),
             "DLEQ verification should fail with wrong Z"
         );
+    }
+
+    #[test]
+    fn test_public_inputs() {
+        println!("{}", std::env::current_dir().unwrap().display());
+        let proof = fs::read("../zk/oprf_commitment/target/proof").unwrap();
+        let (user_id_commitment, x_limbs, y_limbs) = parse_public_inputs(&proof).unwrap();
+        println!("user_id_commitment: {}", user_id_commitment);
+        println!("x_limbs: {:?}", x_limbs);
+        println!("y_limbs: {:?}", y_limbs);
     }
 }
