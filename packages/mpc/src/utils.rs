@@ -2,7 +2,6 @@
 
 use std::fs;
 use std::process::Command;
-use std::str::FromStr;
 
 use crate::api::Error;
 use k256::{
@@ -14,11 +13,10 @@ use k256::{
     AffinePoint, EncodedPoint, FieldBytes, ProjectivePoint, Scalar,
 };
 use num_bigint::BigUint;
-use num_traits::{FromPrimitive, Num, Zero};
+use num_traits::{FromPrimitive, Num};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use thiserror::Error;
 use uuid::Uuid;
 
 const PRIVATE_KEY_FILE: &str = "./private_key.txt";

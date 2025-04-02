@@ -1,15 +1,4 @@
-#![allow(unused)]
-#![allow(clippy::let_unit_value)]
-
 use actix_web::{http::StatusCode, web, App, HttpResponse, HttpServer, ResponseError};
-use k256::{
-    elliptic_curve::{
-        group::GroupEncoding,
-        sec1::{FromEncodedPoint, ToEncodedPoint},
-        subtle::CtOption,
-    },
-    AffinePoint, EncodedPoint, ProjectivePoint,
-};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -61,13 +50,13 @@ async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpRespons
     // Extract the proof string before passing to web::block
     let proof = req.proof.clone();
 
-    let (user_id_commitment, point) = parse_public_inputs(&proof)?;
+    let (_, point) = parse_public_inputs(&proof)?;
 
     // Convert ECPoint to ProjectivePoint
     let commitment2_point = ecpoint_to_projective(&point)?;
 
     // Run the blocking proof verification in a separate thread pool
-    web::block(move || verify_zk_proof(&proof))
+    let _ = web::block(move || verify_zk_proof(&proof))
         .await
         .map_err(|e| {
             eprintln!("Blocking operation failed: {:?}", e);
