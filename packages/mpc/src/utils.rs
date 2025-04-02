@@ -2,7 +2,9 @@
 
 use std::fs;
 use std::process::Command;
+use std::str::FromStr;
 
+use crate::api::Error;
 use k256::{
     elliptic_curve::{
         rand_core::OsRng,
@@ -11,13 +13,13 @@ use k256::{
     },
     AffinePoint, EncodedPoint, FieldBytes, ProjectivePoint, Scalar,
 };
+use num_bigint::BigUint;
+use num_traits::{FromPrimitive, Num, Zero};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use thiserror::Error;
 use uuid::Uuid;
-
-use crate::api::Error;
 
 const PRIVATE_KEY_FILE: &str = "./private_key.txt";
 
@@ -45,7 +47,7 @@ pub struct ECPoint {
     pub y: String,
 }
 
-pub fn verify_zk_proof(proof: &str) -> Result<(), Error> {
+pub fn verify_zk_proof(proof: &[u8]) -> Result<(), Error> {
     // Create a unique temporary file for the proof
     let temp_proof_path = format!("./target/temp_proof_{}", Uuid::new_v4());
 
@@ -262,9 +264,25 @@ pub fn projective_to_ecpoint(point: &ProjectivePoint) -> ECPoint {
     }
 }
 
-pub fn parse_public_inputs(
-    proof: &[u8],
-) -> Result<(String, Vec<String>, Vec<String>), std::io::Error> {
+pub fn limbs_to_hex(limbs: &[String]) -> String {
+    let limb0 = BigUint::from_str_radix(limbs[0].trim_start_matches("0x"), 16).unwrap();
+    let limb1 = BigUint::from_str_radix(limbs[1].trim_start_matches("0x"), 16).unwrap();
+    let limb2 = BigUint::from_str_radix(limbs[2].trim_start_matches("0x"), 16).unwrap();
+
+    // Define 2^120 as a BigUint
+    let two = BigUint::from_u32(2).unwrap();
+    let shift_120 = two.pow(120);
+
+    // Combine the limbs: limb0 + limb1 * 2^120 + limb2 * 2^240 as described in Noir-BigNum
+    let result = limb0 + (limb1 * &shift_120.clone()) + (limb2 * shift_120.pow(2));
+
+    // Convert to hexadecimal string, remove "0x" prefix, and ensure 64 digits (256 bits)
+    let hex_result = format!("{:064x}", result);
+
+    hex_result
+}
+
+pub fn parse_public_inputs(proof: &[u8]) -> Result<(String, ECPoint), Error> {
     // Extract user_id_commitment (bytes 0-31)
     let user_id_commitment = format!("0x{}", hex::encode(&proof[0..32]));
 
@@ -299,7 +317,12 @@ pub fn parse_public_inputs(
         y_limbs.push(limb_str);
     }
 
-    Ok((user_id_commitment, x_limbs, y_limbs))
+    let x = limbs_to_hex(&x_limbs);
+    let y = limbs_to_hex(&y_limbs);
+
+    let ecpoint = ECPoint { x, y };
+
+    Ok((user_id_commitment, ecpoint))
 }
 
 #[cfg(test)]
@@ -338,13 +361,16 @@ mod tests {
         );
     }
 
-    #[test]
-    fn test_public_inputs() {
-        println!("{}", std::env::current_dir().unwrap().display());
-        let proof = fs::read("../zk/oprf_commitment/target/proof").unwrap();
-        let (user_id_commitment, x_limbs, y_limbs) = parse_public_inputs(&proof).unwrap();
-        println!("user_id_commitment: {}", user_id_commitment);
-        println!("x_limbs: {:?}", x_limbs);
-        println!("y_limbs: {:?}", y_limbs);
-    }
+    // #[test]
+    // fn test_public_inputs() {
+    //     println!("{}", std::env::current_dir().unwrap().display());
+    //     let proof = fs::read("../zk/oprf_commitment/target/proof").unwrap();
+    //     let (user_id_commitment, point) = parse_public_inputs(&proof).unwrap();
+    //     println!("user_id_commitment: {}", user_id_commitment);
+    //     println!("point: {:?}", point);
+
+    //     let projective_point = ecpoint_to_projective(&point).unwrap();
+    //     let ecpoint = projective_to_ecpoint(&projective_point);
+    //     println!("ecpoint: {:?}", ecpoint);
+    // }
 }

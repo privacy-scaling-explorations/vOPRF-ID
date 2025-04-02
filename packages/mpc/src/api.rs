@@ -14,14 +14,13 @@ use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 use crate::utils::{
-    ecpoint_to_projective, projective_to_ecpoint, verify_zk_proof, DleqProof, ECPoint, KEYS,
+    ecpoint_to_projective, parse_public_inputs, projective_to_ecpoint, verify_zk_proof, DleqProof,
+    ECPoint, KEYS,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EvaluateRequest {
-    pub commitment1: String,
-    pub commitment2: ECPoint,
-    pub proof: String,
+    pub proof: Vec<u8>,
 }
 
 #[derive(Serialize)]
@@ -62,6 +61,11 @@ async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpRespons
     // Extract the proof string before passing to web::block
     let proof = req.proof.clone();
 
+    let (user_id_commitment, point) = parse_public_inputs(&proof)?;
+
+    // Convert ECPoint to ProjectivePoint
+    let commitment2_point = ecpoint_to_projective(&point)?;
+
     // Run the blocking proof verification in a separate thread pool
     web::block(move || verify_zk_proof(&proof))
         .await
@@ -69,9 +73,6 @@ async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpRespons
             eprintln!("Blocking operation failed: {:?}", e);
             Error::InvalidProof
         })?;
-
-    // Convert ECPoint to ProjectivePoint
-    let commitment2_point = ecpoint_to_projective(&req.commitment2)?;
 
     // Perform scalar multiplication with private key
     let result_point = commitment2_point * KEYS.0;
