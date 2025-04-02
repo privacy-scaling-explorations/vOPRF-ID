@@ -49,7 +49,7 @@ pub struct ECPoint {
 
 pub fn verify_zk_proof(proof: &[u8]) -> Result<(), Error> {
     // Create a unique temporary file for the proof
-    let temp_proof_path = format!("./target/temp_proof_{}", Uuid::new_v4());
+    let temp_proof_path = format!("./packages/mpc/generated/temp_proof_{}", Uuid::new_v4());
 
     // Write proof string to the temporary file
     fs::write(&temp_proof_path, proof).map_err(|e| {
@@ -61,7 +61,7 @@ pub fn verify_zk_proof(proof: &[u8]) -> Result<(), Error> {
     let output = Command::new("bb")
         .arg("verify")
         .arg("-k")
-        .arg("./target/vk")
+        .arg("./packages/mpc/generated/vk")
         .arg("-p")
         .arg(&temp_proof_path)
         .output()
