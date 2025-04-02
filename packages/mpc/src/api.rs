@@ -1,4 +1,6 @@
-use actix_web::{http::StatusCode, web, App, HttpResponse, HttpServer, ResponseError};
+use actix_web::{
+    dev::ConnectionInfo, http::StatusCode, web, App, HttpResponse, HttpServer, ResponseError,
+};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -46,11 +48,18 @@ impl ResponseError for Error {
     }
 }
 
-async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpResponse, Error> {
+async fn evaluate_handler(
+    req: web::Json<EvaluateRequest>,
+    conn_info: ConnectionInfo,
+) -> Result<HttpResponse, Error> {
+    println!("Got the request from {:?}", conn_info.peer_addr().unwrap());
+
     // Extract the proof string before passing to web::block
     let proof = req.proof.clone();
 
     let (_, point) = parse_public_inputs(&proof)?;
+
+    println!("Parsed the proof");
 
     // Convert ECPoint to ProjectivePoint
     let commitment2_point = ecpoint_to_projective(&point)?;
@@ -63,6 +72,8 @@ async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpRespons
             Error::InvalidProof
         })?;
 
+    println!("Verified the proof");
+
     // Perform scalar multiplication with private key
     let result_point = commitment2_point * KEYS.0;
 
@@ -71,6 +82,8 @@ async fn evaluate_handler(req: web::Json<EvaluateRequest>) -> Result<HttpRespons
 
     // Generate DLEQ proof that shows the same private key was used
     let dleq_proof = DleqProof::new(&commitment2_point);
+
+    println!("Sending the response");
 
     Ok(HttpResponse::Ok().json(EvaluateResponse { result, dleq_proof }))
 }

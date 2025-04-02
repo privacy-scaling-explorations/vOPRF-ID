@@ -1,7 +1,7 @@
 import requests
 
 # Read the proof file
-with open("./packages/zk/target/proof", 'rb') as f:
+with open("../zk/oprf_commitment/target/proof", 'rb') as f:
     proof = f.read()
 
 # Send POST request
