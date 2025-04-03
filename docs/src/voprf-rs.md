@@ -29,11 +29,6 @@ Processes vOPRF evaluation requests and returns the result with a proof of corre
 - Body:
   ```json
   {
-    "commitment1": "0x...", // scalar (Poseidon hash - commitment)
-    "commitment2": {
-      "x": "0x...",  // hex-encoded x coordinate
-      "y": "0x..."   // hex-encoded y coordinate
-    },
     "proof": {
       // ZK proof that commitment is valid
       // (as specified in [OPRF Commitment Circuit](./zk-circuits.md#circuit-1-oprf-commitment-circuit))
