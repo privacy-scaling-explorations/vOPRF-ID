@@ -1,6 +1,5 @@
 use bignum::bignum::BigNum;
 use noir_bigcurve::curves::secp256k1::{Secp256k1, Secp256k1_Fq_Params, Secp256k1Scalar};
-use noir_bigcurve::scalar_field::ScalarField;
 use std::{hash::poseidon2, ops::Add};
 
 fn main(
