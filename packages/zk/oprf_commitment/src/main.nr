@@ -1,11 +1,12 @@
-use noir_bigcurve::curves::secp256k1::Secp256k1;
+use bignum::bignum::BigNum;
+use noir_bigcurve::curves::secp256k1::{Secp256k1, Secp256k1_Fq_Params, Secp256k1Scalar};
 use noir_bigcurve::scalar_field::ScalarField;
-use std::hash::poseidon2;
+use std::{hash::poseidon2, ops::Add};
 
 fn main(
     user_id: Field,
     salt: Field,
-    random_scalar: Field,
+    random_scalar: BigNum<3, 256, Secp256k1_Fq_Params>,
     user_id_commitment: pub Field,
     oprf_commitment: pub Secp256k1,
 ) {
@@ -20,7 +21,7 @@ fn main(
     let base_point = Secp256k1::hash_to_curve(user_id_bytes);
 
     // Convert the random scalar to the appropriate type
-    let scalar = ScalarField::<32>::from(random_scalar);
+    let scalar = Secp256k1Scalar::from_bignum(random_scalar);
 
     // Compute the OPRF value (scalar multiplication)
     let computed_oprf = Secp256k1::msm([base_point], [scalar]);
@@ -34,16 +35,19 @@ fn test_valid_oprf_commitment() {
     // Test parameters
     let user_id = 12345;
     let salt = 67890;
-    let random_scalar = 42;
+    let random_scalar: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(2);
 
-    // Calculate the expected user_id_commitment
+    // // Calculate the expected user_id_commitment
     let user_id_commitment = poseidon2::Poseidon2::hash([user_id, salt], 2);
 
-    // Calculate the expected oprf_commitment
+    // // Calculate the expected oprf_commitment
     let user_id_bytes: [u8; 32] = user_id.to_le_bytes();
     let base_point = Secp256k1::hash_to_curve(user_id_bytes);
-    let scalar = ScalarField::<32>::from(random_scalar);
+    let scalar = Secp256k1Scalar::from_bignum(random_scalar);
     let oprf_commitment = Secp256k1::msm([base_point], [scalar]);
+
+    println(random_scalar);
+    println(oprf_commitment);
 
     // Test with valid parameters - should pass
     main(
@@ -60,12 +64,12 @@ fn test_invalid_user_id_commitment() {
     // Test parameters
     let user_id = 12345;
     let salt = 67890;
-    let random_scalar = 42;
+    let random_scalar: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(42);
 
     // Calculate the expected oprf_commitment
     let user_id_bytes: [u8; 32] = user_id.to_le_bytes();
     let base_point = Secp256k1::hash_to_curve(user_id_bytes);
-    let scalar = ScalarField::<32>::from(random_scalar);
+    let scalar = Secp256k1Scalar::from_bignum(random_scalar);
     let oprf_commitment = Secp256k1::msm([base_point], [scalar]);
 
     // Create an invalid user_id_commitment (using wrong salt)
@@ -86,7 +90,7 @@ fn test_invalid_oprf_commitment() {
     // Test parameters
     let user_id = 12345;
     let salt = 67890;
-    let random_scalar = 42;
+    let random_scalar: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(42);
 
     // Calculate the expected user_id_commitment
     let user_id_commitment = poseidon2::Poseidon2::hash([user_id, salt], 2);
@@ -94,7 +98,7 @@ fn test_invalid_oprf_commitment() {
     // Calculate an invalid oprf_commitment (using wrong scalar)
     let user_id_bytes: [u8; 32] = user_id.to_le_bytes();
     let base_point = Secp256k1::hash_to_curve(user_id_bytes);
-    let invalid_scalar = ScalarField::<32>::from(random_scalar + 1);
+    let invalid_scalar = Secp256k1Scalar::from_bignum(random_scalar.add(BigNum::from(1)));
     let invalid_oprf_commitment = Secp256k1::msm([base_point], [invalid_scalar]);
 
     // This should fail because the oprf_commitment is invalid
