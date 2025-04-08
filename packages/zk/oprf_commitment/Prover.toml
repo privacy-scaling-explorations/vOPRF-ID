@@ -1,4 +1,3 @@
-random_scalar = "42"
 salt = "67890"
 user_id = "12345"
 user_id_commitment = "0x2ef418c0d71ccca89827b221a86e883a8a01b97282de65ab7ad8c3fe37cfaf1a"
@@ -7,7 +6,10 @@ user_id_commitment = "0x2ef418c0d71ccca89827b221a86e883a8a01b97282de65ab7ad8c3fe
 is_infinity = "0"
 
 [oprf_commitment.x]
-limbs = ["0xc59f84183ae699079f22f40d594e3c", "0x2c1c46a23cd9dde053381c74590c9c", "0x37ef"]
+limbs = ["0x2bb7aac4ce2639b06df602f513367f", "0xe2565ead6749e741bc593e9a1c80cc", "0x4566"]
 
 [oprf_commitment.y]
-limbs = ["0x435ae8a9713983bb5f40d31b841032", "0xe8caa880037f7530cde3a1ed05ce9a", "0xe164"]
+limbs = ["0xf3dee58554086a6f6bf20642c3e9a7", "0xa9b2f36e4d80f9619a247d15c81892", "0x5e26"]
+
+[random_scalar]
+limbs = ["0x2", "0x0", "0x0"]

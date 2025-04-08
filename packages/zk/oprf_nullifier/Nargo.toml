@@ -1,5 +1,5 @@
 [package]
-name = "oprf_commitment"
+name = "oprf_nullifier"
 type = "bin"
 authors = ["Aditya Bisht"]
 
