@@ -83,6 +83,11 @@ async fn evaluate_handler(
     // Generate DLEQ proof that shows the same private key was used
     let dleq_proof = DleqProof::new(&commitment2_point);
 
+    println!("result.x: {:?}", hex::decode(&result.x));
+    println!("result.y: {:?}", hex::decode(&result.y));
+    println!("dleq_proof.c: {:?}", hex::decode(&dleq_proof.c));
+    println!("dleq_proof.s: {:?}", hex::decode(&dleq_proof.s));
+
     println!("Sending the response");
 
     Ok(HttpResponse::Ok().json(EvaluateResponse { result, dleq_proof }))
