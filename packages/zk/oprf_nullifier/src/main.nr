@@ -7,13 +7,14 @@ use std::{hash::{poseidon2, sha256}, ops::Div};
 fn main(
     user_id: Field,
     salt: Field,
-    r: Secp256k1Scalar,
+    r: BigNum<3, 256, Secp256k1_Fq_Params>,
     user_id_commitment: pub Field,
     oprf_response: Secp256k1,
     nullifier: pub Field,
     chaum_pedersen_proof: DleqProof,
     oprf_pubkey: pub Secp256k1,
 ) {
+    let r_scalar = Secp256k1Scalar::from_bignum(r);
     // 1. Verify consistency with Auth Proof
     let hashed_user_data = poseidon2::Poseidon2::hash([user_id, salt], 2);
     assert(hashed_user_data == user_id_commitment);
@@ -21,7 +22,7 @@ fn main(
     // 2. Calculate oprf_commitment
     let user_id_bytes: [u8; 32] = user_id.to_le_bytes();
     let base_point = Secp256k1::hash_to_curve(user_id_bytes);
-    let oprf_commitment = Secp256k1::msm([base_point], [r]);
+    let oprf_commitment = Secp256k1::msm([base_point], [r_scalar]);
 
     // 3. Verify consistency with OPRF
     dleq_proof_verification(
@@ -34,7 +35,7 @@ fn main(
 
     // 4. Calculate nullifier: Poseidon({r^(-1) * oprf_response}.x)
     let one: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(1);
-    let r_inverse: BigNum<3, 256, Secp256k1_Fq_Params> = one.div(r.into_bignum());
+    let r_inverse: BigNum<3, 256, Secp256k1_Fq_Params> = one.div(r);
     let computed_nullifier =
         Secp256k1::msm([oprf_response], [Secp256k1Scalar::from_bignum(r_inverse)]);
     let x = Field::from_le_bytes::<32>(computed_nullifier.x.to_le_bytes::<32>());
@@ -74,8 +75,8 @@ fn sha256_6_points(points: [Secp256k1; 6]) -> [u8; 32] {
 }
 
 struct DleqProof {
-    c: Secp256k1Scalar,
-    s: Secp256k1Scalar,
+    c: BigNum<3, 256, Secp256k1_Fq_Params>,
+    s: BigNum<3, 256, Secp256k1_Fq_Params>,
 }
 
 fn dleq_proof_verification(
@@ -85,14 +86,15 @@ fn dleq_proof_verification(
     z: Secp256k1,
     proof: DleqProof,
 ) {
-    let a_prime = Secp256k1::msm([g, y], [proof.s, proof.c]);
-    let b_prime = Secp256k1::msm([h, z], [proof.s, proof.c]);
+    let s_scalar = Secp256k1Scalar::from_bignum(proof.s);
+    let c_scalar = Secp256k1Scalar::from_bignum(proof.c);
+    let a_prime = Secp256k1::msm([g, y], [s_scalar, c_scalar]);
+    let b_prime = Secp256k1::msm([h, z], [s_scalar, c_scalar]);
 
     let hash = sha256_6_points([g, h, y, z, a_prime, b_prime]);
 
     let hash_bignum: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(hash);
-    let c_prime_scalar = Secp256k1Scalar::from_bignum(hash_bignum);
-    assert(c_prime_scalar.into() == proof.c.into());
+    assert(hash_bignum == proof.c);
 }
 
 #[test]
@@ -153,15 +155,13 @@ fn test_dleq_proof_verification() {
         39, 239, 139, 102, 162, 58, 212, 15, 66, 214, 5, 12, 112, 151, 201, 200, 171, 208, 32, 220,
         134, 170, 225, 29, 232, 145, 128, 145, 49, 140, 118, 213,
     ];
-    let c_bignum: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(c);
-    let c = Secp256k1Scalar::from_bignum(c_bignum);
+    let c: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(c);
 
     let s = [
         212, 126, 161, 189, 151, 214, 139, 31, 86, 128, 147, 191, 115, 38, 241, 211, 34, 103, 44,
         66, 114, 80, 158, 1, 47, 55, 107, 115, 217, 173, 142, 128,
     ];
-    let s_bignum: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(s);
-    let s = Secp256k1Scalar::from_bignum(s_bignum);
+    let s: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(s);
 
     dleq_proof_verification(g, h, y, z, DleqProof { c, s });
 }
