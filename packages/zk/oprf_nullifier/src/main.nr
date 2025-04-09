@@ -10,27 +10,35 @@ fn main(
     r: Secp256k1Scalar,
     user_id_commitment: pub Field,
     oprf_response: Secp256k1,
-    nullifier: pub Secp256k1,
-    chaum_pedersen_proof: pub DleqProof,
+    nullifier: pub Field,
+    chaum_pedersen_proof: DleqProof,
+    oprf_pubkey: pub Secp256k1,
 ) {
     // 1. Verify consistency with Auth Proof
     let hashed_user_data = poseidon2::Poseidon2::hash([user_id, salt], 2);
     assert(hashed_user_data == user_id_commitment);
 
-    // 2. Verify consistency with OPRF
+    // 2. Calculate oprf_commitment
+    let user_id_bytes: [u8; 32] = user_id.to_le_bytes();
+    let base_point = Secp256k1::hash_to_curve(user_id_bytes);
+    let oprf_commitment = Secp256k1::msm([base_point], [r]);
+
+    // 3. Verify consistency with OPRF
     dleq_proof_verification(
-        oprf_response, // Dummy point
-        nullifier, // Dummy point
-        oprf_response, // Dummy point
-        nullifier, // Dummy point
+        Secp256k1::one(),
+        oprf_response,
+        oprf_pubkey,
+        oprf_response,
         chaum_pedersen_proof,
     );
 
-    // 3. Calculate nullifier
+    // 4. Calculate nullifier: Poseidon({r^(-1) * oprf_response}.x)
     let one: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(1);
     let r_inverse: BigNum<3, 256, Secp256k1_Fq_Params> = one.div(r.into_bignum());
     let computed_nullifier =
         Secp256k1::msm([oprf_response], [Secp256k1Scalar::from_bignum(r_inverse)]);
+    let x = Field::from_le_bytes::<32>(computed_nullifier.x.to_le_bytes::<32>());
+    let computed_nullifier = poseidon2::Poseidon2::hash([x], 1);
 
     assert(computed_nullifier == nullifier);
 }
