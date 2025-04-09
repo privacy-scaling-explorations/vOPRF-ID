@@ -27,7 +27,7 @@ fn main(
     // 3. Verify consistency with OPRF
     dleq_proof_verification(
         Secp256k1::one(),
-        oprf_response,
+        oprf_commitment,
         oprf_pubkey,
         oprf_response,
         chaum_pedersen_proof,

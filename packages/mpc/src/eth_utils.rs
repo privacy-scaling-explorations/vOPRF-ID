@@ -1,7 +1,13 @@
 use std::env;
 use std::str::FromStr;
 
-use alloy::primitives::{Address, FixedBytes};
+use alloy::{
+    network::EthereumWallet,
+    primitives::{Address, FixedBytes, U256},
+    providers::{Provider, ProviderBuilder},
+    signers::local::PrivateKeySigner,
+    sol,
+};
 use dotenv::dotenv;
 use k256::{ProjectivePoint, Scalar};
 
@@ -69,9 +75,9 @@ pub async fn register_node(
     );
     println!("Registry contract: {}", config.registry_address);
 
-    // Normally we would check if already registered and then submit transaction
     if force {
-        println!("Would force re-register due to --force flag");
+        todo!("check if registered");
+        todo!("submit transaction");
     }
 
     // For development, just return success
