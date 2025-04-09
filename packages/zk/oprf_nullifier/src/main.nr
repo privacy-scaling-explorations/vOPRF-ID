@@ -10,10 +10,9 @@ fn main(
     r: Secp256k1Fr,
     user_id_commitment: pub Field,
     oprf_response: Secp256k1,
-    // nullifier: pub Field,
     chaum_pedersen_proof: DleqProof,
     oprf_pubkey: pub Secp256k1,
-) {
+) -> pub Field {
     let r_scalar = Secp256k1Scalar::from_bignum(r);
     // 1. Verify consistency with Auth Proof
     let hashed_user_data = poseidon2::Poseidon2::hash([user_id, salt], 2);
@@ -36,12 +35,12 @@ fn main(
     // 4. Calculate nullifier: Poseidon({r^(-1) * oprf_response}.x)
     let one: Secp256k1Fr = BigNum::from(1);
     let r_inverse: Secp256k1Fr = one.div(r);
-    let computed_nullifier =
+    let nullifier =
         Secp256k1::msm([oprf_response], [Secp256k1Scalar::from_bignum(r_inverse)]);
-    let x = Field::from_le_bytes::<32>(computed_nullifier.x.to_le_bytes::<32>());
-    let computed_nullifier = poseidon2::Poseidon2::hash([x], 1);
+    let x = Field::from_le_bytes::<32>(nullifier.x.to_le_bytes::<32>());
+    let nullifier = poseidon2::Poseidon2::hash([x], 1);
 
-    // assert(computed_nullifier == nullifier);
+    nullifier
 }
 
 fn sha256_6_points(points: [Secp256k1; 6]) -> [u8; 32] {
