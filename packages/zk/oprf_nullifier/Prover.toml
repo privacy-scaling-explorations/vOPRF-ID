@@ -1,30 +1,84 @@
-salt = "67890"
-user_id = "12345"
-user_id_commitment = "0x2ef418c0d71ccca89827b221a86e883a8a01b97282de65ab7ad8c3fe37cfaf1a"
+salt = ""
+user_id = ""
+user_id_commitment = ""
+
+[[chaum_pedersen_proof]]
 
 [chaum_pedersen_proof.c]
-limbs = ["0xc4460b80ecdc85c3a58716656d60bc", "0x17e7414d36d71aaf5a19a758dcbe7a", "0xa8bd"]
+limbs = ["", "", ""]
 
 [chaum_pedersen_proof.s]
-limbs = ["0xc19553842be23a002acca508e09528", "0x0325d05142c68b8358410d5c5376f4", "0xf5db"]
+limbs = ["", "", ""]
 
-[oprf_pubkey]
-is_infinity = "0"
+[[chaum_pedersen_proof]]
+
+[chaum_pedersen_proof.c]
+limbs = ["", "", ""]
+
+[chaum_pedersen_proof.s]
+limbs = ["", "", ""]
+
+[[chaum_pedersen_proof]]
+
+[chaum_pedersen_proof.c]
+limbs = ["", "", ""]
+
+[chaum_pedersen_proof.s]
+limbs = ["", "", ""]
+
+[[oprf_pubkey]]
+is_infinity = ""
 
 [oprf_pubkey.x]
-limbs = ["0x16b052c3e0db6d634beefcc78215b9", "0x8cc6b7bdcd8260b232cdbe6e5f70e1", "0x7b87"]
+limbs = ["", "", ""]
 
 [oprf_pubkey.y]
-limbs = ["0x7de8899bc703a47437f0e60fd5e8c0", "0x02756b616a03d5a3d065c5520c85f9", "0xdf4a"]
+limbs = ["", "", ""]
 
-[oprf_response]
-is_infinity = "0"
+[[oprf_pubkey]]
+is_infinity = ""
+
+[oprf_pubkey.x]
+limbs = ["", "", ""]
+
+[oprf_pubkey.y]
+limbs = ["", "", ""]
+
+[[oprf_pubkey]]
+is_infinity = ""
+
+[oprf_pubkey.x]
+limbs = ["", "", ""]
+
+[oprf_pubkey.y]
+limbs = ["", "", ""]
+
+[[oprf_response]]
+is_infinity = ""
 
 [oprf_response.x]
-limbs = ["0xd43d2b0d10a02e90e869bbc070011e", "0xf7b4c9faf55c6eaa667e3c4520a339", "0x1af9"]
+limbs = ["", "", ""]
 
 [oprf_response.y]
-limbs = ["0x640e74ace533ff6c7e748457a8406d", "0xb69954b18fa9b0ff6c2ab75c268e8f", "0xc4e1"]
+limbs = ["", "", ""]
+
+[[oprf_response]]
+is_infinity = ""
+
+[oprf_response.x]
+limbs = ["", "", ""]
+
+[oprf_response.y]
+limbs = ["", "", ""]
+
+[[oprf_response]]
+is_infinity = ""
+
+[oprf_response.x]
+limbs = ["", "", ""]
+
+[oprf_response.y]
+limbs = ["", "", ""]
 
 [r]
-limbs = ["0x2", "0x0", "0x0"]
+limbs = ["", "", ""]

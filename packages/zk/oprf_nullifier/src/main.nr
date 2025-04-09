@@ -9,9 +9,9 @@ fn main(
     salt: Field,
     r: Secp256k1Fr,
     user_id_commitment: pub Field,
-    oprf_response: Secp256k1,
-    chaum_pedersen_proof: DleqProof,
-    oprf_pubkey: pub Secp256k1,
+    oprf_response: [Secp256k1; 3],
+    chaum_pedersen_proof: [DleqProof; 3],
+    oprf_pubkey: pub [Secp256k1; 3],
 ) -> pub Field {
     let r_scalar = Secp256k1Scalar::from_bignum(r);
     // 1. Verify consistency with Auth Proof
@@ -24,19 +24,21 @@ fn main(
     let oprf_commitment = Secp256k1::msm([base_point], [r_scalar]);
 
     // 3. Verify consistency with OPRF
-    dleq_proof_verification(
-        Secp256k1::one(),
-        oprf_commitment,
-        oprf_pubkey,
-        oprf_response,
-        chaum_pedersen_proof,
-    );
+    for i in 0..3 {
+        dleq_proof_verification(
+            Secp256k1::one(),
+            oprf_commitment,
+            oprf_pubkey[i],
+            oprf_response[i],
+            chaum_pedersen_proof[i],
+        );
+    }
 
     // 4. Calculate nullifier: Poseidon({r^(-1) * oprf_response}.x)
     let one: Secp256k1Fr = BigNum::from(1);
     let r_inverse: Secp256k1Fr = one.div(r);
-    let nullifier =
-        Secp256k1::msm([oprf_response], [Secp256k1Scalar::from_bignum(r_inverse)]);
+    let oprf = oprf_response[0] + oprf_response[1] + oprf_response[2];
+    let nullifier = Secp256k1::msm([oprf], [Secp256k1Scalar::from_bignum(r_inverse)]);
     let x = Field::from_le_bytes::<32>(nullifier.x.to_le_bytes::<32>());
     let nullifier = poseidon2::Poseidon2::hash([x], 1);
 
