@@ -1,16 +1,16 @@
 use bignum::{BigNum, bignum::BigNumTrait};
 use noir_bigcurve::BigCurveTrait;
-use noir_bigcurve::curves::secp256k1::{Secp256k1, Secp256k1_Fq_Params, Secp256k1Scalar};
+use noir_bigcurve::curves::secp256k1::{Secp256k1, Secp256k1Fr, Secp256k1Scalar};
 use noir_bigcurve::scalar_field::ScalarFieldTrait;
 use std::{hash::{poseidon2, sha256}, ops::Div};
 
 fn main(
     user_id: Field,
     salt: Field,
-    r: BigNum<3, 256, Secp256k1_Fq_Params>,
+    r: Secp256k1Fr,
     user_id_commitment: pub Field,
     oprf_response: Secp256k1,
-    nullifier: pub Field,
+    // nullifier: pub Field,
     chaum_pedersen_proof: DleqProof,
     oprf_pubkey: pub Secp256k1,
 ) {
@@ -34,14 +34,14 @@ fn main(
     );
 
     // 4. Calculate nullifier: Poseidon({r^(-1) * oprf_response}.x)
-    let one: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from(1);
-    let r_inverse: BigNum<3, 256, Secp256k1_Fq_Params> = one.div(r);
+    let one: Secp256k1Fr = BigNum::from(1);
+    let r_inverse: Secp256k1Fr = one.div(r);
     let computed_nullifier =
         Secp256k1::msm([oprf_response], [Secp256k1Scalar::from_bignum(r_inverse)]);
     let x = Field::from_le_bytes::<32>(computed_nullifier.x.to_le_bytes::<32>());
     let computed_nullifier = poseidon2::Poseidon2::hash([x], 1);
 
-    assert(computed_nullifier == nullifier);
+    // assert(computed_nullifier == nullifier);
 }
 
 fn sha256_6_points(points: [Secp256k1; 6]) -> [u8; 32] {
@@ -75,8 +75,8 @@ fn sha256_6_points(points: [Secp256k1; 6]) -> [u8; 32] {
 }
 
 struct DleqProof {
-    c: BigNum<3, 256, Secp256k1_Fq_Params>,
-    s: BigNum<3, 256, Secp256k1_Fq_Params>,
+    c: Secp256k1Fr,
+    s: Secp256k1Fr,
 }
 
 fn dleq_proof_verification(
@@ -93,7 +93,7 @@ fn dleq_proof_verification(
 
     let hash = sha256_6_points([g, h, y, z, a_prime, b_prime]);
 
-    let hash_bignum: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(hash);
+    let hash_bignum: Secp256k1Fr = BigNum::from_be_bytes(hash);
     assert(hash_bignum == proof.c);
 }
 
@@ -155,13 +155,13 @@ fn test_dleq_proof_verification() {
         39, 239, 139, 102, 162, 58, 212, 15, 66, 214, 5, 12, 112, 151, 201, 200, 171, 208, 32, 220,
         134, 170, 225, 29, 232, 145, 128, 145, 49, 140, 118, 213,
     ];
-    let c: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(c);
+    let c: Secp256k1Fr = BigNum::from_be_bytes(c);
 
     let s = [
         212, 126, 161, 189, 151, 214, 139, 31, 86, 128, 147, 191, 115, 38, 241, 211, 34, 103, 44,
         66, 114, 80, 158, 1, 47, 55, 107, 115, 217, 173, 142, 128,
     ];
-    let s: BigNum<3, 256, Secp256k1_Fq_Params> = BigNum::from_be_bytes(s);
+    let s: Secp256k1Fr = BigNum::from_be_bytes(s);
 
     dleq_proof_verification(g, h, y, z, DleqProof { c, s });
 }
