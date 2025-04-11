@@ -11,8 +11,8 @@ async fn main() -> std::io::Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Initialize { force } => {
-            if let Err(e) = cli::handle_initialize(force).await {
+        Commands::Initialize => {
+            if let Err(e) = cli::handle_initialize().await {
                 eprintln!("Initialization failed: {}", e);
                 std::process::exit(1);
             }

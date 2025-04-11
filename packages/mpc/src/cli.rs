@@ -5,7 +5,6 @@ use clap::{Parser, Subcommand};
 use k256::{elliptic_curve::rand_core::OsRng, Scalar};
 
 use crate::eth_utils;
-use crate::utils::KEYS;
 
 #[derive(Parser)]
 #[command(author, version = "0.1.0", about = "vOPRF-ID MPC Node implementation", long_about = None)]
@@ -17,20 +16,16 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Initialize the MPC Node
-    Initialize {
-        /// Force reinitialize the MPC Node
-        #[arg(short, long)]
-        force: bool,
-    },
+    Initialize,
     /// Start the MPC Node
     Serve,
 }
 
-pub async fn handle_initialize(force: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn handle_initialize() -> Result<(), Box<dyn std::error::Error>> {
     let private_key_path = PathBuf::from("./private_key.txt");
 
-    if private_key_path.exists() && !force {
-        println!("Private key file already exists. Use --force to overwrite.");
+    if private_key_path.exists() {
+        println!("Private key file already exists");
         return Ok(());
     }
 
@@ -38,7 +33,7 @@ pub async fn handle_initialize(force: bool) -> Result<(), Box<dyn std::error::Er
     let private_key = Scalar::generate_vartime(&mut OsRng);
 
     // Register the node with the Registry contract
-    if let Err(e) = eth_utils::register_node(&private_key, force).await {
+    if let Err(e) = eth_utils::register_node(&private_key).await {
         println!("Failed to register node: {}", e);
         return Err(e);
     }
@@ -56,7 +51,7 @@ pub async fn handle_initialize(force: bool) -> Result<(), Box<dyn std::error::Er
 
 pub async fn check_private_key_exists() -> Result<(), Box<dyn std::error::Error>> {
     // Check if node is registered in the Registry contract
-    let is_registered = eth_utils::check_node_registration(&KEYS.0).await?;
+    let is_registered = eth_utils::check_node_registration().await?;
 
     if !is_registered {
         println!("Node is not properly registered in the Registry contract.");
