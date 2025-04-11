@@ -13,6 +13,8 @@ use k256::{ProjectivePoint, Scalar};
 
 use crate::utils::{projective_to_ecpoint, KEYS};
 
+sol!("../registry/src/Registry.sol");
+
 // Configuration struct to hold Ethereum settings
 pub struct EthConfig {
     pub eth_rpc_url: String,
@@ -67,6 +69,11 @@ pub async fn check_node_registration() -> Result<bool, Box<dyn std::error::Error
     let config = EthConfig::new()?;
     let public_key = KEYS.1;
     let public_key_bytes = point_to_bytes32_array(&public_key);
+
+    let provider = ProviderBuilder::new().on_http(config.eth_rpc_url.parse()?);
+
+    let latest_block = provider.get_block_number().await?;
+    println!("Latest block: {}", latest_block);
 
     Ok(true)
 }
