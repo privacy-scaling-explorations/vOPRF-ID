@@ -18,11 +18,10 @@ async fn main() -> std::io::Result<()> {
             }
         }
         Commands::Serve => {
-            // if let Err(e) = cli::check_private_key_exists().await {
-            //     eprintln!("Error checking node status: {}", e);
-            //     std::process::exit(1);
-            // }
-            println!("Starting server with private key: {:?}", utils::KEYS.0);
+            if let Err(e) = cli::check_private_key_exists().await {
+                eprintln!("Error checking node status: {}", e);
+                std::process::exit(1);
+            }
             api::run_server().await?;
         }
     }

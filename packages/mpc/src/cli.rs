@@ -55,13 +55,6 @@ pub async fn handle_initialize(force: bool) -> Result<(), Box<dyn std::error::Er
 }
 
 pub async fn check_private_key_exists() -> Result<(), Box<dyn std::error::Error>> {
-    let private_key_path = PathBuf::from("./private_key.txt");
-
-    if !private_key_path.exists() {
-        println!("Private key file not found. Please run with 'initialize' command first.");
-        std::process::exit(1);
-    }
-
     // Check if node is registered in the Registry contract
     let is_registered = eth_utils::check_node_registration(&KEYS.0).await?;
 

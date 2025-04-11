@@ -22,21 +22,13 @@ use uuid::Uuid;
 const PRIVATE_KEY_FILE: &str = "./private_key.txt";
 
 pub static KEYS: Lazy<(Scalar, ProjectivePoint)> = Lazy::new(|| {
-    if let Ok(data) = fs::read(PRIVATE_KEY_FILE) {
-        let scalar_bytes = FieldBytes::from_slice(&data);
-        let private_key = Scalar::from_repr_vartime(*scalar_bytes).expect("invalid scalar bytes");
-        let public_key = ProjectivePoint::GENERATOR * private_key;
+    let data = fs::read(PRIVATE_KEY_FILE)
+        .expect("Failed to read private key file. Try running with 'initialize' command first.");
+    let scalar_bytes = FieldBytes::from_slice(&data);
+    let private_key = Scalar::from_repr_vartime(*scalar_bytes).expect("invalid scalar bytes");
+    let public_key = ProjectivePoint::GENERATOR * private_key;
 
-        (private_key, public_key)
-    } else {
-        let private_key = Scalar::generate_vartime(&mut OsRng);
-        let public_key = ProjectivePoint::GENERATOR * private_key;
-
-        let bytes = private_key.to_bytes();
-        fs::write(PRIVATE_KEY_FILE, bytes.as_slice()).unwrap();
-
-        (private_key, public_key)
-    }
+    (private_key, public_key)
 });
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -358,17 +350,4 @@ mod tests {
             "DLEQ verification should fail with wrong Z"
         );
     }
-
-    // #[test]
-    // fn test_public_inputs() {
-    //     println!("{}", std::env::current_dir().unwrap().display());
-    //     let proof = fs::read("../zk/oprf_commitment/target/proof").unwrap();
-    //     let (user_id_commitment, point) = parse_public_inputs(&proof).unwrap();
-    //     println!("user_id_commitment: {}", user_id_commitment);
-    //     println!("point: {:?}", point);
-
-    //     let projective_point = ecpoint_to_projective(&point).unwrap();
-    //     let ecpoint = projective_to_ecpoint(&projective_point);
-    //     println!("ecpoint: {:?}", ecpoint);
-    // }
 }

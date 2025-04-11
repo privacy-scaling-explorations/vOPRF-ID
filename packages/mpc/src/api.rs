@@ -9,6 +9,8 @@ use crate::utils::{
     ECPoint, KEYS,
 };
 
+const ADDRESS: &str = "0.0.0.0:8080";
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct EvaluateRequest {
     pub proof: Vec<u8>,
@@ -89,8 +91,9 @@ async fn evaluate_handler(
 }
 
 pub async fn run_server() -> std::io::Result<()> {
+    println!("Starting server on {}", ADDRESS);
     HttpServer::new(|| App::new().route("/api/v1/evaluate", web::post().to(evaluate_handler)))
-        .bind("0.0.0.0:8080")?
+        .bind(ADDRESS)?
         .run()
         .await
 }
