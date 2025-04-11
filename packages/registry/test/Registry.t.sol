@@ -6,10 +6,6 @@ import "../src/Registry.sol";
 
 contract RegistryTest is Test {
     Registry public registry;
-    address public node1;
-    address public node2;
-    address public node3;
-    address public node4;
     bytes32[2] public key1;
     bytes32[2] public key2;
     bytes32[2] public key3;
@@ -17,12 +13,6 @@ contract RegistryTest is Test {
 
     function setUp() public {
         registry = new Registry();
-
-        // Create test accounts
-        node1 = makeAddr("node1");
-        node2 = makeAddr("node2");
-        node3 = makeAddr("node3");
-        node4 = makeAddr("node4");
 
         // Create test keys
         key1 = [bytes32(uint256(1)), bytes32(uint256(2))];
@@ -32,54 +22,53 @@ contract RegistryTest is Test {
     }
 
     function testBasicRegistration() public {
-        vm.prank(node1);
-        registry.register(key1);
+        uint256 nodeId = registry.register(key1);
 
-        assertTrue(registry.isRegistered(node1));
+        assertTrue(registry.isRegistered(key1));
         assertEq(registry.numRegisteredNodes(), 1);
+        assertEq(nodeId, 0);
 
-        bytes32[2] memory storedKey = registry.getNodePublicKey(node1);
+        bytes32[2] memory storedKey = registry.getNodePublicKey(nodeId);
         assertEq(storedKey[0], key1[0]);
         assertEq(storedKey[1], key1[1]);
     }
 
-    function testCannotRegisterTwice() public {
-        vm.prank(node1);
+    function testCannotRegisterDuplicateKey() public {
         registry.register(key1);
 
-        vm.prank(node1);
-        vm.expectRevert(Registry.AlreadyRegistered.selector);
+        vm.expectRevert(Registry.DuplicatePublicKey.selector);
         registry.register(key1);
     }
 
     function testMaxNodesLimit() public {
         // Register three nodes
-        vm.prank(node1);
-        registry.register(key1);
-
-        vm.prank(node2);
-        registry.register(key2);
-
-        vm.prank(node3);
-        registry.register(key3);
+        uint256 nodeId1 = registry.register(key1);
+        uint256 nodeId2 = registry.register(key2);
+        uint256 nodeId3 = registry.register(key3);
 
         // Verify all three are registered
-        assertTrue(registry.isRegistered(node1));
-        assertTrue(registry.isRegistered(node2));
-        assertTrue(registry.isRegistered(node3));
+        assertTrue(registry.isRegistered(key1));
+        assertTrue(registry.isRegistered(key2));
+        assertTrue(registry.isRegistered(key3));
         assertEq(registry.numRegisteredNodes(), 3);
+        assertEq(nodeId1, 0);
+        assertEq(nodeId2, 1);
+        assertEq(nodeId3, 2);
 
         // Try to register a fourth node
-        vm.prank(node4);
         vm.expectRevert(Registry.MaxNodesReached.selector);
         registry.register(key4);
     }
 
+    function testInvalidNodeId() public {
+        vm.expectRevert(Registry.InvalidNodeId.selector);
+        registry.getNodePublicKey(0);
+    }
+
     function testEmittedEvents() public {
         vm.expectEmit(true, true, true, true);
-        emit Registry.NodeRegistered(node1, key1);
+        emit Registry.NodeRegistered(0, key1);
 
-        vm.prank(node1);
         registry.register(key1);
     }
 }
