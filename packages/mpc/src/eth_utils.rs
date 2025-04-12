@@ -2,10 +2,8 @@ use std::env;
 use std::str::FromStr;
 
 use alloy::{
-    network::EthereumWallet,
-    primitives::{Address, FixedBytes, U256},
-    providers::{Provider, ProviderBuilder},
-    signers::local::PrivateKeySigner,
+    primitives::{Address, FixedBytes},
+    providers::ProviderBuilder,
     sol,
 };
 use dotenv::dotenv;
@@ -13,7 +11,10 @@ use k256::{ProjectivePoint, Scalar};
 
 use crate::utils::{projective_to_ecpoint, KEYS};
 
-sol!("../registry/src/Registry.sol");
+sol!(
+    #[sol(rpc)]
+    "../registry/src/Registry.sol"
+);
 
 // Configuration struct to hold Ethereum settings
 pub struct EthConfig {
@@ -61,6 +62,18 @@ pub async fn register_node(private_key: &Scalar) -> Result<bool, Box<dyn std::er
     let public_key = ProjectivePoint::GENERATOR * *private_key;
     let public_key_bytes = point_to_bytes32_array(&public_key);
 
+    let provider = ProviderBuilder::new().on_http(config.eth_rpc_url.parse()?);
+    let registry = Registry::new(config.registry_address, provider);
+
+    let tx_hash = registry
+        .register(public_key_bytes)
+        .send()
+        .await?
+        .watch()
+        .await?;
+
+    println!("Registered node. Tx hash: {}", tx_hash);
+
     Ok(true)
 }
 
@@ -71,9 +84,9 @@ pub async fn check_node_registration() -> Result<bool, Box<dyn std::error::Error
     let public_key_bytes = point_to_bytes32_array(&public_key);
 
     let provider = ProviderBuilder::new().on_http(config.eth_rpc_url.parse()?);
+    let registry = Registry::new(config.registry_address, provider);
 
-    let latest_block = provider.get_block_number().await?;
-    println!("Latest block: {}", latest_block);
+    let is_registered = registry.isRegistered(public_key_bytes).call().await?._0;
 
-    Ok(true)
+    Ok(is_registered)
 }

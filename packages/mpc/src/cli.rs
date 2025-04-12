@@ -54,7 +54,7 @@ pub async fn check_private_key_exists() -> Result<(), Box<dyn std::error::Error>
     let is_registered = eth_utils::check_node_registration().await?;
 
     if !is_registered {
-        println!("Node is not properly registered in the Registry contract.");
+        println!("Node is not registered in the Registry contract.");
         println!(
             "Please run with 'initialize' command first, or check your Ethereum configuration."
         );
