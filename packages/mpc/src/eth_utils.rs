@@ -2,8 +2,10 @@ use std::env;
 use std::str::FromStr;
 
 use alloy::{
+    network::EthereumWallet,
     primitives::{Address, FixedBytes},
     providers::ProviderBuilder,
+    signers::local::PrivateKeySigner,
     sol,
 };
 use dotenv::dotenv;
@@ -20,6 +22,7 @@ sol!(
 pub struct EthConfig {
     pub eth_rpc_url: String,
     pub registry_address: Address,
+    pub eth_private_key: String,
 }
 
 impl EthConfig {
@@ -32,9 +35,13 @@ impl EthConfig {
             &env::var("REGISTRY_ADDRESS").expect("REGISTRY_ADDRESS must be set in .env file"),
         )?;
 
+        let eth_private_key =
+            env::var("ETH_PRIVATE_KEY").expect("ETH_PRIVATE_KEY must be set in .env file");
+
         Ok(Self {
             eth_rpc_url,
             registry_address,
+            eth_private_key,
         })
     }
 }
@@ -62,7 +69,11 @@ pub async fn register_node(private_key: &Scalar) -> Result<bool, Box<dyn std::er
     let public_key = ProjectivePoint::GENERATOR * *private_key;
     let public_key_bytes = point_to_bytes32_array(&public_key);
 
-    let provider = ProviderBuilder::new().on_http(config.eth_rpc_url.parse()?);
+    let pk_signer: PrivateKeySigner = config.eth_private_key.parse()?;
+    let wallet = EthereumWallet::new(pk_signer);
+    let provider = ProviderBuilder::new()
+        .wallet(wallet)
+        .on_http(config.eth_rpc_url.parse()?);
     let registry = Registry::new(config.registry_address, provider);
 
     let tx_hash = registry
