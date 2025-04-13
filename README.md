@@ -63,6 +63,14 @@ To run the node:
 cargo run --release -- serve # This will run a vOPRF node
 ```
 
+### Run in a docker container
+
+```bash
+docker build -t voprf . --no-cache
+docker run -it --cap-add=NET_ADMIN --name=party1 -p 8081:8080 voprf
+```
+Even if you run in the Docker - you'll still need to set a Registry contract, and initialize the node.
+
 ---
 
 ### ZK part
